@@ -21,9 +21,16 @@ Para desarrollo: `npm run start:dev`.
 ```bash
 npm test             # unitarios (no necesitan base de datos)
 npm run test:e2e     # e2e por HTTP contra PostgreSQL (con la base levantada)
+npm run test:api     # Playwright: caja negra contra la API compilada y arrancada de verdad
 ```
 
-Los e2e usan un esquema propio (`test`) dentro de la misma base y lo migran solos antes de empezar, así que no tocan los datos de desarrollo. Se puede apuntar a otra base con `TEST_DATABASE_URL`.
+Hay tres niveles:
+
+- **Unitarios (Jest):** la lógica del servicio con Prisma simulado.
+- **e2e (Jest + Supertest):** la app de Nest en memoria, con la base real.
+- **API (Playwright):** compila y arranca la API como en producción (`node dist/main.js`, en el puerto 3100) y la prueba solo por HTTP: el ciclo de vida completo de una tarea, la paginación ordenada y los códigos de error. Cada test usa su propio responsable, así que no necesita limpiar la base. Deja un informe HTML en `playwright-report/`. No hace falta descargar navegadores: solo usa el cliente HTTP de Playwright.
+
+Los e2e usan un esquema propio (`test`) dentro de la misma base y lo migran solos antes de empezar, así que no tocan los datos de desarrollo; Playwright usa otro (`playwright`). Se puede apuntar a otra base con `TEST_DATABASE_URL`.
 
 ## Endpoints
 
@@ -79,6 +86,7 @@ curl 'localhost:3000/tasks?status=pending&assignee=ana&page=1&limit=10'
 - **Validación estricta.** `ValidationPipe` con `whitelist` y `forbidNonWhitelisted`: un campo desconocido es un 400, no se ignora en silencio.
 - **404 sin consultas extra.** `PATCH` y `DELETE` van directo a la base; si la tarea no existe, Prisma responde `P2025` y un filtro de excepciones lo convierte en 404. Así no hay una consulta previa ni una carrera entre comprobar y borrar.
 - **Orden del listado:** por fecha límite y luego por creación, para que la paginación sea estable.
+- **Playwright además de Supertest.** Supertest prueba la app dentro del proceso de Jest; Playwright prueba el artefacto compilado como proceso aparte, que es lo que se despliega (así se detectan fallos de arranque o de configuración que en memoria no salen). Sin pruebas visuales: la prueba es una API sin interfaz.
 - **La misma configuración en los tests.** `configureApp` aplica los pipes y filtros tanto en `main.ts` como en los e2e, así que los tests prueban lo mismo que corre en producción.
 
 ## Qué haría con más tiempo
@@ -93,7 +101,7 @@ curl 'localhost:3000/tasks?status=pending&assignee=ana&page=1&limit=10'
 
 Usé Claude Code (modelo Claude Opus 5.5) durante toda la prueba.
 
-**Qué le pedí:** revisar mis proyectos por si había una base reutilizable, proponer el stack, escribir el código, los tests y este README por pasos, con un commit por avance.
+**Qué le pedí:** revisar mis proyectos por si había una base reutilizable, proponer el stack, escribir el código, los tests y este README por pasos, con un commit por avance. Después, añadir pruebas con Playwright; quedaron limitadas a la API porque no hay interfaz que probar visualmente.
 
 **Qué acepté:**
 - Empezar desde cero en vez de adaptar un proyecto anterior de tareas (NestJS + TypeORM con SQLite): solo tenía título y completado, sin filtros, paginación, validación ni migraciones, así que adaptarlo era rehacerlo.
