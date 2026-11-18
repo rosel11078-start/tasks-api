@@ -101,4 +101,5 @@ Usé Claude Code (modelo Claude Opus 5.5) durante toda la prueba.
 
 **Qué se corrigió al probar la API a mano con curl:**
 - `dueDate` salía como `2026-12-01T00:00:00.000Z`; se cambió para devolver `2026-12-01`, igual que se envía.
+- Al clonar el repositorio desde cero no compilaba: el cliente de Prisma no se generaba al instalar. Se añadió `prisma generate` en `postinstall`.
 - La primera versión de `PATCH` y `DELETE` buscaba la tarea antes de modificarla: dos consultas y una carrera si otra petición la borraba en medio, que acababa en 500. Se cambió por el filtro de `P2025` a 404.
