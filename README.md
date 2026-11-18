@@ -4,7 +4,7 @@ API REST para gestionar tareas con Node.js, TypeScript, NestJS, Prisma y Postgre
 
 ## Cómo ejecutarlo
 
-Requisitos: Node.js 20 o superior y Docker.
+Requisitos: Node.js 20.12 o superior y Docker.
 
 ```bash
 npm install
